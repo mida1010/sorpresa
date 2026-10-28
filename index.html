@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffedf4">
+<meta name="description" content="Una piccola sorpresa per Federica.">
+<title>Una sorpresa per Federica 💗</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+:root{font-family:'DM Sans',system-ui,sans-serif;color:#683148;background:#fff2f6}
+*{box-sizing:border-box}body{margin:0;min-height:100svh;overflow-x:hidden;background:radial-gradient(ellipse at 20% 15%,#ffe0ed 0,transparent 40%),radial-gradient(ellipse at 90% 85%,#f7d9ff 0,transparent 48%),#fff7fa}
+main{position:relative;z-index:2;min-height:100svh;display:grid;place-items:center;padding:30px 17px}
+.card{width:min(100%,440px);text-align:center;padding:35px 24px 33px;background:rgba(255,255,255,.83);border:1px solid #fff;border-radius:32px;box-shadow:0 25px 75px #c85c871e;backdrop-filter:blur(15px)}
+.label{display:inline-block;padding:9px 15px;border-radius:99px;background:#fff0f6;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#c65b86}
+h1{font:700 clamp(34px,8vw,48px)/1.13 'Playfair Display',Georgia,serif;letter-spacing:-.035em;margin:19px 0 13px;color:#913d64}
+p{line-height:1.6;color:#8c6074;font-size:15px;margin:0 auto 23px;max-width:320px}
+.heart-big{font-size:57px;display:block;filter:drop-shadow(0 8px 10px #ff9ab66e);animation:pulse 2s infinite}
+@keyframes pulse{50%{transform:scale(1.13) rotate(-6deg)}}
+button{font:inherit;cursor:pointer}
+.primary{border:0;background:linear-gradient(125deg,#ff79a8,#de4f88);color:#fff;padding:15px 27px;border-radius:99px;font-weight:700;box-shadow:0 10px 24px #e8588a4d;transition:transform .15s}
+.primary:active{transform:scale(.97)}.primary:focus-visible,.tile:focus-visible{outline:3px solid #8f3c67;outline-offset:3px}
+.hidden{display:none!important}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;max-width:305px;margin:21px auto 15px}
+.tile{aspect-ratio:1;border:none;border-radius:18px;background:linear-gradient(145deg,#ff8caf,#e9719b);font-size:34px;box-shadow:0 7px 0 #e8b4c6,0 8px 17px #d75b8f24;transition:transform .2s,background .2s}
+.tile:disabled{cursor:default}.tile:not(:disabled):active{transform:translateY(4px)}.tile .face{opacity:0;transform:scale(.4);display:block;transition:all .18s}
+.tile.revealed,.tile.matched{background:#fff0f5;border:2px solid #ffbfd3;box-shadow:0 4px 12px #d75b8f14}.tile.revealed .face,.tile.matched .face{opacity:1;transform:scale(1)}
+.tile.matched{background:#ffe2ed}.hint{font-size:12px;color:#ab7890;margin-top:11px}.status{min-height:23px;font-size:13px;color:#b2557f;font-weight:700}
+.sparkle{position:fixed;z-index:1;pointer-events:none;opacity:.5;animation:drift 9s ease-in-out infinite}
+@keyframes drift{50%{transform:translateY(-22px) rotate(15deg)}}
+.sparkle:nth-child(1){top:12%;left:7%;font-size:29px}.sparkle:nth-child(2){top:24%;right:8%;font-size:22px;animation-delay:-2s}.sparkle:nth-child(3){bottom:14%;left:9%;font-size:27px;animation-delay:-4s}.sparkle:nth-child(4){bottom:9%;right:11%;font-size:34px;animation-delay:-6s}
+#result h1{font-size:clamp(39px,10vw,59px);background:linear-gradient(110deg,#d73e7e,#ae5aa7,#e35a86);background-clip:text;-webkit-background-clip:text;color:transparent;animation:appear .8s both}
+@keyframes appear{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
+.wreath{font-size:54px;letter-spacing:5px;animation:appear .8s .3s both}.final-line{margin:12px auto 25px}.hearts{font-size:28px;letter-spacing:6px;margin:0 0 25px;animation:pulse 2s infinite}
+.confetti{position:fixed;pointer-events:none;z-index:5;width:10px;height:16px;border-radius:4px;animation:fall var(--dur) linear forwards;left:var(--x);top:-25px;background:var(--color);transform:rotate(var(--rot))}
+@keyframes fall{to{transform:translate(var(--move),110vh) rotate(850deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="sparkle" aria-hidden="true">💗</div><div class="sparkle" aria-hidden="true">✨</div><div class="sparkle" aria-hidden="true">🌷</div><div class="sparkle" aria-hidden="true">💞</div>
+<main>
+<section class="card" id="welcome">
+<span class="label">Una sorpresa speciale</span>
+<h1>Ciao, Federica!</h1>
+<span class="heart-big" aria-hidden="true">💖</span>
+<p>Ho preparato un memory di tre livelli. Trova tutte le coppie senza sbagliare!</p>
+<button class="primary" id="start">Cominciamo ✨</button>
+</section>
+<section class="card hidden" id="game">
+<span class="label"><span id="level-info">Livello 1 di 3</span></span>
+<h1>Trova le coppie</h1>
+<p>Abbina le carte uguali. Se sbagli, tutte le carte tornano coperte e riparti da zero nel livello.</p>
+<div class="board" id="board" aria-label="Gioco di memoria con sei carte"></div>
+<div class="status" id="status" aria-live="polite">Coppie trovate: 0 di 3</div>
+<div class="hint">Tocca due carte per scoprirle 💌</div>
+</section>
+<section class="card hidden" id="result" aria-live="polite">
+<span class="label">Solo per te</span>
+<div class="wreath" aria-hidden="true">✨ 💐 ✨</div>
+<h1>Federica,<br>sei bellissima!</h1>
+<p class="final-line">Un piccolo messaggio per ricordarti quanto sei stupenda. 💗</p>
+<div class="hearts" aria-hidden="true">💕 💖 💕</div>
+<button class="primary" id="again">Rigioca 💌</button>
+</section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const views=['welcome','game','result'];
+
+const symbols=['💖','🌷','✨','🦋'];
+const counts=[2,3,4];
+let level=0,first=null,locked=false,matches=0,round=0;
+function show(id){views.forEach(name=>$(name).classList.toggle('hidden',name!==id));}
+function start(){level=0;show('game');newRound();}
+function newRound(){
+ round++;const n=counts[level];first=null;locked=false;matches=0;
+ $('level-info').textContent='Livello '+(level+1)+' di 3';
+ $('status').textContent='Coppie trovate: 0 di '+n;
+ const cards=symbols.slice(0,n).flatMap(x=>[x,x]);
+ for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];}
+ $('board').replaceChildren();
+ for(const [i,symbol] of cards.entries()){
+  const b=document.createElement('button');b.type='button';b.className='tile';b.dataset.symbol=symbol;
+  b.setAttribute('aria-label','Carta '+(i+1)+', coperta');
+  const face=document.createElement('span');face.className='face';face.textContent=symbol;face.setAttribute('aria-hidden','true');b.append(face);
+  const token=round;b.addEventListener('click',()=>flip(b,token));$('board').append(b);
+ }
+}
+function flip(card,token){
+ if(locked||token!==round||card===first||card.classList.contains('matched'))return;
+ card.classList.add('revealed');card.setAttribute('aria-label','Carta scoperta: '+card.dataset.symbol);
+ if(!first){first=card;return;}
+ const previous=first;first=null;locked=true;
+ if(previous.dataset.symbol===card.dataset.symbol){
+  [previous,card].forEach(b=>{b.classList.add('matched');b.disabled=true;});
+  matches++;$('status').textContent='Coppie trovate: '+matches+' di '+counts[level];
+  if(matches===counts[level]){
+   $('status').textContent='Livello completato! 💖';
+   setTimeout(()=>{if(token!==round)return;if(level===2){show('result');celebrate();}else{level++;newRound();}},800);
+  }else{locked=false;}
+ }else{
+  $('status').textContent='Hai sbagliato! Si ricomincia il livello 💗';
+  setTimeout(()=>{if(token===round)newRound();},1000);
+ }
+}
+function celebrate(){
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const palette=['#f36b9e','#ffc5d8','#e5a3ed','#ffd375','#ffffff'];
+ for(let i=0;i<90;i++){
+  const piece=document.createElement('span');piece.className='confetti';
+  piece.style.setProperty('--x',Math.random()*100+'vw');
+  piece.style.setProperty('--dur',2+Math.random()*3+'s');
+  piece.style.setProperty('--move',(Math.random()-.5)*150+'px');
+  piece.style.setProperty('--rot',Math.random()*360+'deg');
+  piece.style.setProperty('--color',palette[i%palette.length]);
+  document.body.append(piece);piece.addEventListener('animationend',()=>piece.remove(),{once:true});
+ }
+}
+$('start').addEventListener('click',start);
+$('again').addEventListener('click',start);
+</script>
+</body>
+</html>
