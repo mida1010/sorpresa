@@ -50,7 +50,7 @@ button{font:inherit;cursor:pointer}
 <section class="card hidden" id="game">
 <span class="label"><span id="level-info">Livello 1 di 3</span></span>
 <h1>Trova le coppie</h1>
-<p>Abbina le carte uguali. Se sbagli, tutte le carte tornano coperte e riparti da zero nel livello.</p>
+<p>Abbina le carte uguali. Se sbagli, tutte le carte si ricoprono, ma restano nella stessa posizione. Riparti da zero nel livello.</p>
 <div class="board" id="board" aria-label="Gioco di memoria con sei carte"></div>
 <div class="status" id="status" aria-live="polite">Coppie trovate: 0 di 3</div>
 <div class="hint">Tocca due carte per scoprirle 💌</div>
@@ -88,6 +88,15 @@ function newRound(){
   const token=round;b.addEventListener('click',()=>flip(b,token));$('board').append(b);
  }
 }
+function resetCurrentLevel(){
+ first=null;locked=false;matches=0;
+ $('status').textContent='Coppie trovate: 0 di '+counts[level];
+ for(const card of $('board').querySelectorAll('.tile')){
+  card.classList.remove('revealed','matched');
+  card.disabled=false;
+  card.setAttribute('aria-label','Carta coperta');
+ }
+}
 function flip(card,token){
  if(locked||token!==round||card===first||card.classList.contains('matched'))return;
  card.classList.add('revealed');card.setAttribute('aria-label','Carta scoperta: '+card.dataset.symbol);
@@ -102,7 +111,7 @@ function flip(card,token){
   }else{locked=false;}
  }else{
   $('status').textContent='Hai sbagliato! Si ricomincia il livello 💗';
-  setTimeout(()=>{if(token===round)newRound();},1000);
+  setTimeout(()=>{if(token===round)resetCurrentLevel();},1000);
  }
 }
 function celebrate(){
