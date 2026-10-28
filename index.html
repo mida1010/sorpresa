@@ -76,22 +76,22 @@ button{font:inherit;cursor:pointer}
 <section class="card hidden" id="clue" aria-live="polite">
 <span class="label" id="clue-heading">Un indizio per te</span>
 <div class="secret" aria-hidden="true">💌</div>
-<h1>Un piccolo segreto...</h1>
+<h1>Un passo più vicino...</h1>
 <p class="secret-message" id="clue-text"></p>
 <p id="clue-subtitle">Ogni risposta ti porta un po' più vicino alla sorpresa.</p>
 <button class="primary" id="next-clue">Continua ✨</button>
 </section>
 <section class="card hidden" id="riddle">
-<span class="label">L'ultimo segreto</span>
+<span class="label">La porta finale</span>
 <div class="secret" aria-hidden="true">🔐</div>
-<h1>Un'ultima domanda</h1>
-<p>Non si può incartare, ma si può regalare. Non si può vedere, ma si può sentire. Cos'è?</p>
+<h1>Scegli una chiave</h1>
+<p>Tre chiavi, una sola apre la porta. Fidati del tuo istinto. 💗</p>
 <div class="choices" id="choices">
-<button class="choice" data-answer="no" type="button">Un fiore 🌷</button>
-<button class="choice" data-answer="yes" type="button">L'affetto 💗</button>
-<button class="choice" data-answer="no" type="button">Una fotografia 📷</button>
+<button class="choice" data-key="0" type="button">🗝️ Chiave di luna</button>
+<button class="choice" data-key="1" type="button">🗝️ Chiave di stelle</button>
+<button class="choice" data-key="2" type="button">🗝️ Chiave di cuore</button>
 </div>
-<div class="status" id="riddle-status" role="status" aria-live="polite">Scegli una risposta per aprire il lucchetto.</div>
+<div class="status" id="riddle-status" role="status" aria-live="polite">Scegli la chiave giusta per proseguire.</div>
 </section>
 <section class="card hidden" id="fakeout" aria-live="polite">
 <span class="label">Missione compiuta</span>
@@ -120,9 +120,10 @@ let level=0,first=null,locked=false,matches=0,round=0;
 const clues=[
  'Le cose più belle non si trovano sempre al primo tentativo... ✨',
  'Certe persone riescono a rendere speciale anche un giorno qualsiasi. 🌷',
- 'E adesso manca soltanto un piccolo segreto da scoprire. 💗'
+ 'Sei arrivata fin qui... ma il bello deve ancora venire. 💗'
 ];
 let pendingTransition=null;
+let correctKey=0;
 function clearTransition(){if(pendingTransition!==null){clearTimeout(pendingTransition);pendingTransition=null;}}
 function floatHearts(){
  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -135,13 +136,13 @@ function floatHearts(){
 function showClue(){
  $('clue-heading').textContent='Indizio '+(level+1)+' di 3';
  $('clue-text').textContent=clues[level];
- $('clue-subtitle').textContent=level===2?'Ci sei quasi. Rimane solo una piccola domanda.':'Ogni passo ti avvicina alla sorpresa.';
- $('next-clue').textContent=level===2?'Sblocca il segreto 🔐':'Continua ✨';
+ $('clue-subtitle').textContent=level===2?'Ci sei quasi. Ora manca soltanto una porta da aprire.':'Continua, c’è ancora qualcosa che ti aspetta.';
+ $('next-clue').textContent=level===2?'Vai alla porta 🔐':'Continua ✨';
  show('clue');
 }
 function advance(){
  if(level<2){level++;show('game');newRound();}
- else{show('riddle');$('riddle-status').textContent='Scegli una risposta per aprire il lucchetto.';}
+ else{correctKey=Math.floor(Math.random()*3);document.querySelectorAll('#choices button').forEach(button=>button.disabled=false);show('riddle');$('riddle-status').textContent='Scegli la chiave giusta per proseguire.';}
 }
 function reveal(){
  show('result');celebrate();
@@ -208,14 +209,15 @@ $('again').addEventListener('click',start);
 $('next-clue').addEventListener('click',advance);
 $('reveal').addEventListener('click',reveal);
 $('choices').addEventListener('click',event=>{
- const button=event.target.closest('button[data-answer]');
- if(!button||!$('choices').contains(button))return;
- if(button.dataset.answer==='yes'){
-  $('riddle-status').textContent='Lucchetto aperto! 💖';
+ const button=event.target.closest('button[data-key]');
+ if(!button||!$('choices').contains(button)||button.disabled)return;
+ if(Number(button.dataset.key)===correctKey){
+  $('riddle-status').textContent='La porta si apre... 💖';
   floatHearts();
   show('fakeout');
  }else{
-  $('riddle-status').textContent='Non proprio... riprova, Leonessa 💗';
+  $('riddle-status').textContent='Questa non gira... provane un’altra, Leonessa 💗';
+  button.disabled=true;
  }
 });
 </script>
