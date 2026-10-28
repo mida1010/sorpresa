@@ -35,6 +35,24 @@ button{font:inherit;cursor:pointer}
 .confetti{position:fixed;pointer-events:none;z-index:5;width:10px;height:16px;border-radius:4px;animation:fall var(--dur) linear forwards;left:var(--x);top:-25px;background:var(--color);transform:rotate(var(--rot))}
 @keyframes fall{to{transform:translate(var(--move),110vh) rotate(850deg);opacity:0}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Percorso segreto: piccoli indizi, transizioni e rivelazione finale. */
+.progress-track{height:5px;background:#ffe0eb;border-radius:99px;overflow:hidden;margin:18px auto 0;max-width:280px}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#f77bad,#ad63bd);border-radius:99px;transition:width .5s}
+.secret{font-size:38px;margin:7px auto 16px;animation:appear .65s both}
+.secret-message{font-family:'Playfair Display',Georgia,serif;font-size:24px;color:#913d64;line-height:1.35}
+.choices{display:grid;gap:10px;margin:19px 0}
+.choice{border:2px solid #f7bfd3;background:#fff3f8;border-radius:16px;padding:13px;color:#913d64;font:600 15px 'DM Sans',sans-serif;cursor:pointer;transition:transform .18s,background .18s}
+.choice:active{transform:scale(.97)}.choice:focus-visible{outline:3px solid #8f3c67;outline-offset:3px}
+.choice:disabled{opacity:.55;cursor:default}
+.mini-heart{position:fixed;pointer-events:none;z-index:6;font-size:23px;animation:float-heart 1.1s ease-out forwards;left:var(--x);top:var(--y)}
+@keyframes float-heart{to{transform:translateY(-80px) scale(1.4);opacity:0}}
+.card{animation:appear .4s both}
+.tile .face{backface-visibility:hidden}
+.tile{transform-style:preserve-3d;perspective:600px}
+.tile.revealed,.tile.matched{animation:turn-card .3s ease-out}
+@keyframes turn-card{from{transform:rotateY(75deg)}to{transform:rotateY(0deg)}}
+@media(prefers-reduced-motion:reduce){.mini-heart{display:none}}
 </style>
 </head>
 <body>
@@ -53,7 +71,34 @@ button{font:inherit;cursor:pointer}
 <p>Abbina le carte uguali. Se sbagli, tutte le carte si ricoprono, ma restano nella stessa posizione. Riparti da zero nel livello.</p>
 <div class="board" id="board" aria-label="Gioco di memoria con sei carte"></div>
 <div class="status" id="status" aria-live="polite">Coppie trovate: 0 di 3</div>
-<div class="hint">Tocca due carte per scoprirle 💌</div>
+<div class="hint">Tocca due carte per scoprirle 💌</div><div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress"></div></div>
+</section>
+<section class="card hidden" id="clue" aria-live="polite">
+<span class="label" id="clue-heading">Un indizio per te</span>
+<div class="secret" aria-hidden="true">💌</div>
+<h1>Un piccolo segreto...</h1>
+<p class="secret-message" id="clue-text"></p>
+<p id="clue-subtitle">Ogni risposta ti porta un po' più vicino alla sorpresa.</p>
+<button class="primary" id="next-clue">Continua ✨</button>
+</section>
+<section class="card hidden" id="riddle">
+<span class="label">L'ultimo segreto</span>
+<div class="secret" aria-hidden="true">🔐</div>
+<h1>Un'ultima domanda</h1>
+<p>Non si può incartare, ma si può regalare. Non si può vedere, ma si può sentire. Cos'è?</p>
+<div class="choices" id="choices">
+<button class="choice" data-answer="no" type="button">Un fiore 🌷</button>
+<button class="choice" data-answer="yes" type="button">L'affetto 💗</button>
+<button class="choice" data-answer="no" type="button">Una fotografia 📷</button>
+</div>
+<div class="status" id="riddle-status" role="status" aria-live="polite">Scegli una risposta per aprire il lucchetto.</div>
+</section>
+<section class="card hidden" id="fakeout" aria-live="polite">
+<span class="label">Missione compiuta</span>
+<div class="secret" aria-hidden="true">🎁</div>
+<h1>Hai finito!</h1>
+<p>O forse... no?</p>
+<button class="primary" id="reveal">Apri la tua sorpresa 💖</button>
 </section>
 <section class="card hidden" id="result" aria-live="polite">
 <span class="label">Solo per te</span>
@@ -67,15 +112,45 @@ button{font:inherit;cursor:pointer}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const views=['welcome','game','result'];
+const views=['welcome','game','clue','riddle','fakeout','result'];
 
 const symbols=['💖','🌷','✨','🦋'];
 const counts=[2,3,4];
 let level=0,first=null,locked=false,matches=0,round=0;
+const clues=[
+ 'Le cose più belle non si trovano sempre al primo tentativo... ✨',
+ 'Certe persone riescono a rendere speciale anche un giorno qualsiasi. 🌷',
+ 'E adesso manca soltanto un piccolo segreto da scoprire. 💗'
+];
+let pendingTransition=null;
+function clearTransition(){if(pendingTransition!==null){clearTimeout(pendingTransition);pendingTransition=null;}}
+function floatHearts(){
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ for(let i=0;i<5;i++){
+  const h=document.createElement('span');h.className='mini-heart';h.textContent=['💗','💕','✨'][i%3];
+  h.style.setProperty('--x',(30+Math.random()*40)+'vw');h.style.setProperty('--y',(45+Math.random()*20)+'vh');
+  document.body.append(h);h.addEventListener('animationend',()=>h.remove(),{once:true});
+ }
+}
+function showClue(){
+ $('clue-heading').textContent='Indizio '+(level+1)+' di 3';
+ $('clue-text').textContent=clues[level];
+ $('clue-subtitle').textContent=level===2?'Ci sei quasi. Rimane solo una piccola domanda.':'Ogni passo ti avvicina alla sorpresa.';
+ $('next-clue').textContent=level===2?'Sblocca il segreto 🔐':'Continua ✨';
+ show('clue');
+}
+function advance(){
+ if(level<2){level++;show('game');newRound();}
+ else{show('riddle');$('riddle-status').textContent='Scegli una risposta per aprire il lucchetto.';}
+}
+function reveal(){
+ show('result');celebrate();
+}
 function show(id){views.forEach(name=>$(name).classList.toggle('hidden',name!==id));}
-function start(){level=0;show('game');newRound();}
+function start(){clearTransition();level=0;show('game');newRound();}
 function newRound(){
  round++;const n=counts[level];first=null;locked=false;matches=0;
+ $('progress').style.width=(level/3*100)+'%';
  $('level-info').textContent='Livello '+(level+1)+' di 3';
  $('status').textContent='Coppie trovate: 0 di '+n;
  const cards=symbols.slice(0,n).flatMap(x=>[x,x]);
@@ -104,10 +179,11 @@ function flip(card,token){
  const previous=first;first=null;locked=true;
  if(previous.dataset.symbol===card.dataset.symbol){
   [previous,card].forEach(b=>{b.classList.add('matched');b.disabled=true;});
-  matches++;$('status').textContent='Coppie trovate: '+matches+' di '+counts[level];
+  matches++;floatHearts();$('status').textContent='Coppie trovate: '+matches+' di '+counts[level];
   if(matches===counts[level]){
    $('status').textContent='Livello completato! 💖';
-   setTimeout(()=>{if(token!==round)return;if(level===2){show('result');celebrate();}else{level++;newRound();}},800);
+   $('progress').style.width=((level+1)/3*100)+'%';
+   pendingTransition=setTimeout(()=>{pendingTransition=null;if(token!==round)return;showClue();},800);
   }else{locked=false;}
  }else{
   $('status').textContent='Hai sbagliato! Si ricomincia il livello 💗';
@@ -129,6 +205,19 @@ function celebrate(){
 }
 $('start').addEventListener('click',start);
 $('again').addEventListener('click',start);
+$('next-clue').addEventListener('click',advance);
+$('reveal').addEventListener('click',reveal);
+$('choices').addEventListener('click',event=>{
+ const button=event.target.closest('button[data-answer]');
+ if(!button||!$('choices').contains(button))return;
+ if(button.dataset.answer==='yes'){
+  $('riddle-status').textContent='Lucchetto aperto! 💖';
+  floatHearts();
+  show('fakeout');
+ }else{
+  $('riddle-status').textContent='Non proprio... riprova, Leonessa 💗';
+ }
+});
 </script>
 </body>
 </html>
