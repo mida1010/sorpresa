@@ -74,18 +74,18 @@ button{font:inherit;cursor:pointer}
 <div class="hint">Tocca due carte per scoprirle 💌</div><div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress"></div></div>
 </section>
 <section class="card hidden" id="clue" aria-live="polite">
-<span class="label" id="clue-heading">Un indizio per te</span>
+<span class="label" id="clue-heading">Livello completato</span>
 <div class="secret" aria-hidden="true">💌</div>
-<h1>Un passo più vicino...</h1>
+<h1>Ben fatto!</h1>
 <p class="secret-message" id="clue-text"></p>
-<p id="clue-subtitle">Ogni risposta ti porta un po' più vicino alla sorpresa.</p>
+<p id="clue-subtitle">Premi continua per andare avanti.</p>
 <button class="primary" id="next-clue">Continua ✨</button>
 </section>
 <section class="card hidden" id="riddle">
 <span class="label">La porta finale</span>
 <div class="secret" aria-hidden="true">🔐</div>
 <h1>Scegli una chiave</h1>
-<p>Tre chiavi, una sola apre la porta. Fidati del tuo istinto. 💗</p>
+<p>Tre chiavi, una sola apre la porta. Scegli quella giusta.</p>
 <div class="choices" id="choices">
 <button class="choice" data-key="0" type="button">🗝️ Chiave di luna</button>
 <button class="choice" data-key="1" type="button">🗝️ Chiave di stelle</button>
@@ -98,7 +98,7 @@ button{font:inherit;cursor:pointer}
 <div class="secret" aria-hidden="true">🎁</div>
 <h1>Hai finito!</h1>
 <p>O forse... no?</p>
-<button class="primary" id="reveal">Apri la tua sorpresa 💖</button>
+<button class="primary" id="reveal">Scopri il finale ✨</button>
 </section>
 <section class="card hidden" id="result" aria-live="polite">
 <span class="label">Solo per te</span>
@@ -118,9 +118,9 @@ const symbols=['💖','🌷','✨','🦋'];
 const counts=[2,3,4];
 let level=0,first=null,locked=false,matches=0,round=0;
 const clues=[
- 'Le cose più belle non si trovano sempre al primo tentativo... ✨',
- 'Certe persone riescono a rendere speciale anche un giorno qualsiasi. 🌷',
- 'Sei arrivata fin qui... ma il bello deve ancora venire. 💗'
+ 'Primo livello superato!',
+ 'Anche il secondo livello è completato!',
+ 'Hai completato tutti i livelli!'
 ];
 let pendingTransition=null;
 let correctKey=0;
@@ -134,9 +134,9 @@ function floatHearts(){
  }
 }
 function showClue(){
- $('clue-heading').textContent='Indizio '+(level+1)+' di 3';
+ $('clue-heading').textContent='Livello '+(level+1)+' di 3 completato';
  $('clue-text').textContent=clues[level];
- $('clue-subtitle').textContent=level===2?'Ci sei quasi. Ora manca soltanto una porta da aprire.':'Continua, c’è ancora qualcosa che ti aspetta.';
+ $('clue-subtitle').textContent=level===2?'Premi per passare alla sfida finale.':'Premi continua per passare al livello successivo.';
  $('next-clue').textContent=level===2?'Vai alla porta 🔐':'Continua ✨';
  show('clue');
 }
